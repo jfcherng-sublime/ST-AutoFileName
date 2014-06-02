@@ -1,5 +1,6 @@
 import sublime
 import sublime_plugin
+import subprocess
 import os
 from .getimageinfo import getImageInfo
 
@@ -130,6 +131,22 @@ class ReloadAutoCompleteCommand(sublime_plugin.TextCommand):
 
 
 class FileNameComplete(sublime_plugin.EventListener):
+    def get_repo_root(self, cwd):
+      startupinfo = None
+      if sublime.platform() == 'windows':
+        # Don't let console window pop-up on Windows.
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+      process = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
+                                 cwd=cwd,
+                                 stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 startupinfo=startupinfo)
+      output, error = process.communicate()
+      return (str(output, "utf-8") if output else None, process.returncode)
+
     def on_activated(self,view):
         self.showing_win_drives = False
         FileNameComplete.is_active = False
@@ -206,6 +223,10 @@ class FileNameComplete(sublime_plugin.EventListener):
         else:
             return sublime.load_settings('autofilename.sublime-settings').get(string)
 
+    def set_setting(self, setting, value, view):
+        if view:
+            view.settings().set(setting, value)
+
     def on_query_completions(self, view, prefix, locations):
         is_proj_rel = self.get_setting('afn_use_project_root',view)
         valid_scopes = self.get_setting('afn_valid_scopes',view)
@@ -222,6 +243,16 @@ class FileNameComplete(sublime_plugin.EventListener):
             return
         if any(s in view.scope_name(sel) for s in blacklist):
             return
+
+        # Hack to set project_root to the git repository root. Done only once
+        # and cached per view.
+        if not self.get_setting('afn_searched_for_git_root'):
+            path, return_code = self.get_repo_root(
+                os.path.dirname(view.file_name()))
+            if return_code == 0:
+                path = path.strip()
+                self.set_setting('afn_proj_root', path, view)
+            self.set_setting('afn_searched_for_git_root', True, view)
 
         cur_path = os.path.expanduser(self.get_cur_path(view, sel))
 
