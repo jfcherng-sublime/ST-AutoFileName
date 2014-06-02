@@ -225,18 +225,19 @@ class FileNameComplete(sublime_plugin.EventListener):
 
         cur_path = os.path.expanduser(self.get_cur_path(view, sel))
 
-
-        if cur_path.startswith('/') or cur_path.startswith('\\'):
-            if is_proj_rel:
-                proot = self.get_setting('afn_proj_root', view)
-                if proot:
-                    if not view.file_name() and not os.path.isabs(proot):
-                        proot = "/"
+        if is_proj_rel:
+            proot = self.get_setting('afn_proj_root', view)
+            if proot:
+                if not view.file_name() and not os.path.isabs(proot):
+                    proot = "/"
+                if cur_path.startswith('/') or cur_path.startswith('\\'):
                     cur_path = os.path.join(proot, cur_path[1:])
                 else:
-                    for f in sublime.active_window().folders():
-                        if f in view.file_name():
-                            cur_path = f
+                    cur_path = os.path.join(proot, cur_path)
+            else:
+                for f in sublime.active_window().folders():
+                    if f in view.file_name():
+                        cur_path = f
         elif not view.file_name():
             return
         else:
