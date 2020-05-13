@@ -7,11 +7,37 @@ import platform
 import itertools
 import string
 import time
+import re
 
 from .getimageinfo import getImageInfo
 
 g_auto_completions = []
 MAXIMUM_WAIT_TIME = 0.3
+
+def get_setting(string, view=None):
+    if view and view.settings().get(string):
+        return view.settings().get(string)
+    else:
+        return sublime.load_settings('autofilename.sublime-settings').get(string)
+
+def get_cur_scope_settings(view):
+    selection = view.sel()[0].a
+    current_scope_str = view.scope_name(selection)
+
+    all_scopes_settings = get_setting('afn_scopes', view)
+    for scope_settings in all_scopes_settings:
+        if re.search(scope_settings.get('scope'), current_scope_str):
+            return scope_settings
+
+def apply_post_replacements(view, insertion_text):
+    cur_scope_settings = get_cur_scope_settings(view)
+    if cur_scope_settings:
+        replace_on_insert_setting = cur_scope_settings.get('replace_on_insert')
+        if replace_on_insert_setting:
+            for replace in replace_on_insert_setting:
+                insertion_text = re.sub(replace[0], replace[1], insertion_text)
+
+    return insertion_text
 
 class AfnShowFilenames(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -22,9 +48,9 @@ class AfnShowFilenames(sublime_plugin.TextCommand):
 
 class AfnSettingsPanel(sublime_plugin.WindowCommand):
     def run(self):
-        use_pr = '✗ Stop using project root' if self.get_setting('afn_use_project_root') else '✓ Use Project Root'
-        use_dim = '✗ Disable HTML Image Dimension insertion' if self.get_setting('afn_insert_dimensions') else '✓ Auto-insert Image Dimensions in HTML'
-        p_root = self.get_setting('afn_proj_root')
+        use_pr = '✗ Stop using project root' if get_setting('afn_use_project_root') else '✓ Use Project Root'
+        use_dim = '✗ Disable HTML Image Dimension insertion' if get_setting('afn_insert_dimensions') else '✓ Auto-insert Image Dimensions in HTML'
+        p_root = get_setting('afn_proj_root')
 
         menu = [
                 [use_pr, p_root],
@@ -40,12 +66,6 @@ class AfnSettingsPanel(sublime_plugin.WindowCommand):
         if value == 1:
             use_dim = settings.get('afn_use_project_root')
             settings.set('afn_use_project_root', not use_dim)
-
-    def get_setting(self,string,view=None):
-        if view and view.settings().get(string):
-            return view.settings().get(string)
-        else:
-            return sublime.load_settings('autofilename.sublime-settings').get(string)
 
 # Used to remove the / or \ when autocompleting a Windows drive (eg. /C:/path)
 class AfnDeletePrefixedSlash(sublime_plugin.TextCommand):
@@ -70,17 +90,11 @@ class InsertDimensionsCommand(sublime_plugin.TextCommand):
             dimension = str(dim)
             view.insert(edit, selection+1, ' '+name+'="'+dimension+'"')
 
-    def get_setting(self,string,view=None):
-        if view and view.settings().get(string):
-            return view.settings().get(string)
-        else:
-            return sublime.load_settings('autofilename.sublime-settings').get(string)
-
 
     def insert_dimensions(self, edit, scope, w, h):
         view = self.view
 
-        if self.get_setting('afn_insert_width_first',view):
+        if get_setting('afn_insert_width_first',view):
             self.insert_dimension(edit,h,'height', scope)
             self.insert_dimension(edit,w,'width', scope)
         else:
@@ -106,7 +120,7 @@ class InsertDimensionsCommand(sublime_plugin.TextCommand):
         scope = view.extract_scope(selection-1)
 
         # if using a template language, the scope is set to the current line
-        tag_scope = view.line(selection) if self.get_setting('afn_template_languages',view) else view.extract_scope(scope.a-1)
+        tag_scope = view.line(selection) if get_setting('afn_template_languages',view) else view.extract_scope(scope.a-1)
 
         path = view.substr(scope)
         if path.startswith(("'","\"","(")):
@@ -188,7 +202,7 @@ class FileNameComplete(sublime_plugin.EventListener):
             return valid == operand
 
         if key == "afn_use_keybinding":
-            return self.get_setting('afn_use_keybinding',view) == operand
+            return get_setting('afn_use_keybinding',view) == operand
 
     def at_path_end(self,view):
         selection = view.sel()[0]
@@ -283,6 +297,11 @@ class FileNameComplete(sublime_plugin.EventListener):
         # Overrides default auto completion, replaces dot `.` by a `ꓸ` (Lisu Letter Tone Mya Ti)
         # https://github.com/BoundInCode/AutoFileName/issues/18
         return fn.replace(".", "ꓸ")
+
+    def prepare_completion(self, view, this_dir, directory):
+        description = self.fix_dir(this_dir, directory)
+        insertion_text = apply_post_replacements(view, directory)
+        return (description, insertion_text)
 
     def get_cur_path(self,view,selection):
         scope_contents = view.substr(view.extract_scope(selection-1)).strip()
@@ -400,7 +419,7 @@ class FileNameComplete(sublime_plugin.EventListener):
 
                 if not '.' in directory: directory += FileNameComplete.sep
 
-                g_auto_completions.append( ( self.fix_dir( this_dir,directory ), directory ) )
+                g_auto_completions.append(self.prepare_completion(self.view, this_dir, directory))
                 InsertDimensionsCommand.this_dir = this_dir
 
                 if time.time() - self.start_time > MAXIMUM_WAIT_TIME:

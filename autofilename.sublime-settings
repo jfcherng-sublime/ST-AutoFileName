@@ -26,6 +26,15 @@
 	// BlackList specific scopes
 	"afn_blacklist_scopes":["string.regexp.js"],
 
+	"afn_scopes": [
+		{
+			"scope": "\\.jsx?\\s",
+			"replace_on_insert": [
+				["\\.(jsx?|vue)$", ""], // after insertion, remove .js or .vue from path
+			]
+		},
+	],
+
 	// Whether or not AutoFileName should insert the width
 	// and height dimensions after inserting an image into
 	// an image tag
