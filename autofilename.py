@@ -352,7 +352,7 @@ class FileNameComplete(sublime_plugin.EventListener):
         self.get_completions()
 
         # print( "on_query_completions, g_auto_completions: " + str( g_auto_completions ) )
-        return g_auto_completions
+        return (g_auto_completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
     def get_completions(self):
         g_auto_completions.clear()
