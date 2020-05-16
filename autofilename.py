@@ -9,6 +9,7 @@ import string
 import time
 import re
 
+from .context import get_context
 from .getimageinfo import getImageInfo
 
 g_auto_completions = []
@@ -36,7 +37,6 @@ def apply_post_replacements(view, insertion_text):
         if replace_on_insert_setting:
             for replace in replace_on_insert_setting:
                 insertion_text = re.sub(replace[0], replace[1], insertion_text)
-
     return insertion_text
 
 class AfnShowFilenames(sublime_plugin.TextCommand):
@@ -356,6 +356,14 @@ class FileNameComplete(sublime_plugin.EventListener):
 
     def get_completions(self):
         g_auto_completions.clear()
+
+        ctx = get_context(self.view)
+        if not ctx['is_valid']:
+            return
+
+        scope_settings = get_cur_scope_settings(self.view)
+        if not ctx['prefix'] in scope_settings.get('prefixes'):
+            return
 
         file_name = self.view.file_name()
         is_proj_rel = self.get_setting('afn_use_project_root',self.view)
