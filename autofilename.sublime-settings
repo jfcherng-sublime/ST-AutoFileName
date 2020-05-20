@@ -29,7 +29,7 @@
 	"afn_scopes": [
 		{
 			"scope": "\\.jsx?\\s",
-			"prefix": ["require", "define", "import", "from"], // trigger only if prefix matches
+			"prefixes": ["require", "define", "import", "from"], // trigger only if prefix matches
 			"replace_on_insert": [
 				["\\.(jsx?|vue)$", ""], // after insertion, remove .js or .vue from path
 			],
