@@ -30,6 +30,28 @@ def get_cur_scope_settings(view):
         if re.search(scope_settings.get('scope'), current_scope_str):
             return scope_settings
 
+def apply_alias_replacements(entered_path, aliases):
+    project_root = sublime.active_window().folders()[0]
+    replacers = [
+        ('<project_root>', project_root)
+    ]
+
+    result_path = entered_path
+    for alias in aliases:
+        alias_regex = re.compile(alias[0])
+        alias_target = alias[1]
+        if not re.match(alias_regex, result_path):
+            continue
+
+        for replacer in replacers:
+            replace_source = replacer[0]
+            replace_target = replacer[1]
+            alias_target = alias_target.replace(replacer[0], replacer[1])
+
+        result_path = re.sub(alias_regex, alias_target, result_path)
+
+    return result_path if result_path != entered_path else None
+
 def apply_post_replacements(view, insertion_text):
     cur_scope_settings = get_cur_scope_settings(view)
     if cur_scope_settings:
@@ -405,7 +427,9 @@ class FileNameComplete(sublime_plugin.EventListener):
             this_dir = os.path.split(file_name)[0]
             this_dir = os.path.join(this_dir, cur_path)
 
-        # print( "get_completions, this_dir: " + str( this_dir ) )
+            if scope_settings and scope_settings.get('aliases'):
+                result_path = apply_alias_replacements(cur_path, scope_settings.get('aliases'))
+                if result_path: this_dir = result_path
 
         try:
             if os.path.isabs(cur_path) and (not is_proj_rel or not this_dir):
