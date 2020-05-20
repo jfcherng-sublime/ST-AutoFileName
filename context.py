@@ -22,13 +22,15 @@ def get_context(view):
   position = selection[0].begin() if selection else ""
 
   # regions
-  word_region = view.word(position)
   line_region = view.line(position)
-  pre_region = sublime.Region(line_region.a, word_region.a)
-  post_region = sublime.Region(word_region.b, line_region.b)
+  word_region = view.word(position)
+  path_region = view.expand_by_class(word_region, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END, "'\"")
+  pre_region = sublime.Region(line_region.a, path_region.a)
+  post_region = sublime.Region(path_region.b, line_region.b)
 
   # text
   line = view.substr(line_region)
+  # path = view.substr(path_region)
   word = view.substr(word_region)
   pre = view.substr(pre_region)
   post = view.substr(post_region)
@@ -103,6 +105,7 @@ def get_context(view):
 
   return {
     "is_valid": valid and valid_needle and not error,
-    "prefix": prefix,
+    # "path": path,
     "word": word,
+    "prefix": prefix,
   }

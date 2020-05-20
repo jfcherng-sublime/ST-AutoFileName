@@ -352,7 +352,7 @@ class FileNameComplete(sublime_plugin.EventListener):
         self.get_completions()
 
         # print( "on_query_completions, g_auto_completions: " + str( g_auto_completions ) )
-        return (g_auto_completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        return g_auto_completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
     def get_completions(self):
         g_auto_completions.clear()
@@ -362,8 +362,9 @@ class FileNameComplete(sublime_plugin.EventListener):
             return
 
         scope_settings = get_cur_scope_settings(self.view)
-        if not ctx['prefix'] in scope_settings.get('prefixes'):
-            return
+        if scope_settings and scope_settings.get('prefixes') and ctx['prefix']:
+            if not ctx['prefix'] in scope_settings.get('prefixes'):
+                return
 
         file_name = self.view.file_name()
         is_proj_rel = self.get_setting('afn_use_project_root',self.view)
@@ -421,8 +422,9 @@ class FileNameComplete(sublime_plugin.EventListener):
             self.showing_win_drives = False
             dir_files = os.listdir(this_dir)
 
-            for directory in dir_files:
+            now = time.time()
 
+            for directory in dir_files:
                 if directory.startswith( '.' ): continue
 
                 if not '.' in directory: directory += FileNameComplete.sep
@@ -430,7 +432,7 @@ class FileNameComplete(sublime_plugin.EventListener):
                 g_auto_completions.append(self.prepare_completion(self.view, this_dir, directory))
                 InsertDimensionsCommand.this_dir = this_dir
 
-                if time.time() - self.start_time > MAXIMUM_WAIT_TIME:
+                if now - self.start_time > MAXIMUM_WAIT_TIME:
                     return
 
         except OSError:
