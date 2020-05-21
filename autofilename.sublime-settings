@@ -31,10 +31,12 @@
 			"scope": "\\.jsx?\\s",
 			"prefixes": ["require", "define", "import", "from"], // trigger only if prefix matches
 			"replace_on_insert": [
-				["\\.(jsx?|vue)$", ""], // after insertion, remove .js or .vue from path
+				["^@?(\\w+)/?$", "\\1"], // remove trailing slash when importing module from node_modules
+				["\\.(jsx?|vue)$", ""] // after insertion, remove .js or .vue from path
 			],
 			"aliases": [
-				["^@/", "<project_root>/src/"]
+				["^(@?\\w+)", "<project_root>/node_modules/\\1"], // for resolving from node_modules
+				["^@/", "<project_root>/src/"] // custom alias
 			],
 		},
 	],

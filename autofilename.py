@@ -325,13 +325,17 @@ class FileNameComplete(sublime_plugin.EventListener):
         insertion_text = apply_post_replacements(view, directory)
         return (description, insertion_text)
 
-    def get_cur_path(self,view,selection):
+    def get_entered_path(self, view, selection):
         scope_contents = view.substr(view.extract_scope(selection-1)).strip()
         cur_path = scope_contents.replace('\r\n', '\n').split('\n')[0]
 
         if cur_path.startswith(("'","\"","(")):
             cur_path = cur_path[1:-1]
 
+        return cur_path
+
+    def get_cur_path(self, view, selection):
+        cur_path = self.get_entered_path(view, selection)
         return cur_path[:cur_path.rfind(FileNameComplete.sep)+1] if FileNameComplete.sep in cur_path else ''
 
     def get_setting(self,string,view=None):
@@ -428,8 +432,10 @@ class FileNameComplete(sublime_plugin.EventListener):
             this_dir = os.path.join(this_dir, cur_path)
 
             if scope_settings and scope_settings.get('aliases'):
-                result_path = apply_alias_replacements(cur_path, scope_settings.get('aliases'))
-                if result_path: this_dir = result_path
+                entered_path = self.get_entered_path(self.view, self.selection)
+                result_path = apply_alias_replacements(entered_path, scope_settings.get('aliases'))
+                if result_path:
+                    this_dir = re.sub(r'[^/]+$', '', result_path)
 
         try:
             if os.path.isabs(cur_path) and (not is_proj_rel or not this_dir):

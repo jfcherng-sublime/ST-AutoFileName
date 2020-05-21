@@ -13,7 +13,6 @@ NEEDLE_INVALID_CHARACTERS = "\"\'\)=\:\(<>\n\{\}"
 DELIMITER = "\s\:\(\[\=\{"
 
 def get_context(view):
-  print('get_context', 5)
   error = False
   valid = True
   valid_needle = True
@@ -24,13 +23,14 @@ def get_context(view):
   # regions
   line_region = view.line(position)
   word_region = view.word(position)
-  path_region = view.expand_by_class(word_region, sublime.CLASS_WORD_START | sublime.CLASS_WORD_END, "'\"")
-  pre_region = sublime.Region(line_region.a, path_region.a)
-  post_region = sublime.Region(path_region.b, line_region.b)
+  # word (folder/file name) can start with @, ~ or other symbols
+  while re.match(r'[^\/\\\s\n\w\'\"`]', view.substr(sublime.Region(word_region.a - 1, word_region.a))):
+    word_region = sublime.Region(word_region.a - 1, word_region.b)
+  pre_region = sublime.Region(line_region.a, word_region.a)
+  post_region = sublime.Region(word_region.b, line_region.b)
 
   # text
   line = view.substr(line_region)
-  # path = view.substr(path_region)
   word = view.substr(word_region)
   pre = view.substr(pre_region)
   post = view.substr(post_region)
@@ -105,7 +105,6 @@ def get_context(view):
 
   return {
     "is_valid": valid and valid_needle and not error,
-    # "path": path,
     "word": word,
     "prefix": prefix,
   }
