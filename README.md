@@ -97,3 +97,49 @@ Pressing <kbd>ctrl</kbd>+<kbd>space</kbd>, will activate AutoFileName.  I list o
     ]
 
 With this, there's no need to worry about pressing <kbd>ctrl</kbd>+<kbd>space</kbd>, autocompletion with appear upon pressing /.
+
+## Ultimate setup for JavaScript/Node.js development:
+
+1. Open any JavaScript file
+2. Go to "Preferences" -> "Settings - Syntax Specific"
+3. Paste this code:
+
+```js
+{
+  "extensions": ["js", "vue"],
+  "auto_complete_triggers" : [
+    {
+      "characters": ".",
+      "selector": "source.js"
+    },
+    {
+      "characters": "./@abcdefghijklmnopqrstuvwxyz",
+      "selector": "string.quoted.single.js,string.quoted.double.js"
+    }
+  ],
+  "word_separators": ".\\/()\"':,.;<>~!#%^&*|+=[]{}`~?@",
+  "afn_scopes": [
+    {
+      "scope": "\\.jsx?\\s",
+      "prefixes": ["require", "define", "import", "from"], // trigger only if prefix matches
+      "replace_on_insert": [
+        ["^@?(\\w+)/?$", "\\1"], // remove trailing slash when importing module from node_modules
+        ["\\.(jsx?|vue)$", ""] // after insertion, remove .js or .vue from path
+      ],
+      "aliases": [
+        ["^(@?\\w+)", "<project_root>/node_modules/\\1"], // for resolving from node_modules
+        ["^@/", "<project_root>/src/"] // custom alias
+      ],
+    },
+  ],
+}
+```
+
+4. If you are like me and using Vue Components, repeat the above steps for .vue files as well, or create a symlink (for MacOS use bash code below).
+
+```bash
+cd ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User
+ln -s JavaScript.sublime-settings Vue\ Component.sublime-settings
+```
+
+**NOTE:** I encourage you to create a language-specific setting files, rather than editing common settings. This way the above settings will override any package's settings (like "TypeScript" package, which messes up "auto_complete_triggers" and "word_separators" for JavaScript)
