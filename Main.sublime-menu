@@ -3,33 +3,39 @@
         "caption": "Preferences",
         "mnemonic": "n",
         "id": "preferences",
-        "children":
-        [
+        "children": [
             {
                 "caption": "Package Settings",
                 "mnemonic": "P",
                 "id": "package-settings",
-                "children":
-                [
+                "children": [
                     {
                         "caption": "AutoFileName",
-                        "children":
-                        [
+                        "children": [
                             {
-                                "command": "open_file", 
-                                "args": {"file": "${packages}/AutoFileName/autofilename.sublime-settings"},
-                                "caption": "Settings – Default"
+                                "caption": "-",
                             },
                             {
-                                "command": "open_file", 
-                                "args": {"file": "${packages}/User/Preferences.sublime-settings"},
-                                "caption": "Settings – User"
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/AutoFileName/autofilename.sublime-settings",
+                                },
+                                "caption": "Settings – Default",
                             },
-                            { "caption": "-" }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/User/Preferences.sublime-settings",
+                                },
+                                "caption": "Settings – User",
+                            },
+                            {
+                                "caption": "-",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
 ]
