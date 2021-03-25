@@ -14,7 +14,7 @@
                 "operand": true,
             },
             {
-                "key": "setting.afn_insert_dimensions",
+                "key": "setting.afp_insert_dimensions",
                 "operator": "equal",
                 "operand": true,
             },
@@ -37,7 +37,7 @@
                 "operand": true,
             },
             {
-                "key": "setting.afn_insert_dimensions",
+                "key": "setting.afp_insert_dimensions",
                 "operator": "equal",
                 "operand": true,
             },
@@ -50,7 +50,7 @@
         "command": "reload_auto_complete",
         "context": [
             {
-                "key": "afn_deleting_slash",
+                "key": "afp_deleting_slash",
                 "operator": "equal",
                 "operand": true,
             },

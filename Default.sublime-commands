@@ -1,17 +1,17 @@
 [
     {
-        "caption": "AutoFileName: Default Settings",
+        "caption": "AutoFilePath: Default Settings",
         "command": "open_file",
         "args": {
-            "file": "${packages}/AutoFileName/autofilename.sublime-settings",
+            "file": "${packages}/AutoFilePath/AutoFilePath.sublime-settings",
         },
     },
     {
-        "caption": "AutoFileName: Quick Settings",
-        "command": "afn_settings_panel",
+        "caption": "AutoFilePath: Quick Settings",
+        "command": "afp_settings_panel",
     },
     {
-        "caption": "AutoFileName: Auto Complete Now",
-        "command": "afn_show_filenames",
+        "caption": "AutoFilePath: Auto Complete Now",
+        "command": "afp_show_filenames",
     },
 ]
