@@ -2,14 +2,17 @@
 
 """Bits and bytes related humanization."""
 
+from typing import Dict, Iterable, Union
+
+
 suffixes = {
     "decimal": ("kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"),
     "binary": ("KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"),
     "gnu": "KMGTPEZY",
-}
+}  # type: Dict[str,Iterable[str]]
 
 
-def naturalsize(value, binary=False, gnu=False, format="%.1f"):
+def naturalsize(value: Union[int, float, str], binary: bool = False, gnu: bool = False, format: str = "%.1f") -> str:
     """Format a number of bytes like a human readable filesize (e.g. 10 kB).
 
     By default, decimal suffixes (kB, MB) are used.
@@ -17,19 +20,19 @@ def naturalsize(value, binary=False, gnu=False, format="%.1f"):
     Non-GNU modes are compatible with jinja2's `filesizeformat` filter.
 
     Examples:
-        ```pycon
-        >>> naturalsize(3000000)
-        '3.0 MB'
-        >>> naturalsize(300, False, True)
-        '300B'
-        >>> naturalsize(3000, False, True)
-        '2.9K'
-        >>> naturalsize(3000, False, True, "%.3f")
-        '2.930K'
-        >>> naturalsize(3000, True)
-        '2.9 KiB'
+    ```python
+    >>> naturalsize(3000000)
+    '3.0 MB'
+    >>> naturalsize(300, False, True)
+    '300B'
+    >>> naturalsize(3000, False, True)
+    '2.9K'
+    >>> naturalsize(3000, False, True, "%.3f")
+    '2.930K'
+    >>> naturalsize(3000, True)
+    '2.9 KiB'
+    ```
 
-        ```
     Args:
         value (int, float, str): Integer to convert.
         binary (bool): If `True`, uses binary suffixes (KiB, MiB) with base
@@ -41,6 +44,7 @@ def naturalsize(value, binary=False, gnu=False, format="%.1f"):
     Returns:
         str: Human readable representation of a filesize.
     """
+
     if gnu:
         suffix = suffixes["gnu"]
     elif binary:
@@ -59,12 +63,16 @@ def naturalsize(value, binary=False, gnu=False, format="%.1f"):
     elif abs_bytes < base and gnu:
         return "%dB" % bytes
 
+    unit = 1
+    s = ""
     for i, s in enumerate(suffix):
         unit = base ** (i + 2)
         if abs_bytes < unit and not gnu:
-            return (format + " %s") % ((base * bytes / unit), s)
+            return f"{format} %s".format((base * bytes / unit), s)
         elif abs_bytes < unit and gnu:
-            return (format + "%s") % ((base * bytes / unit), s)
+            return f"{format}%s".format((base * bytes / unit), s)
+
     if gnu:
-        return (format + "%s") % ((base * bytes / unit), s)
-    return (format + " %s") % ((base * bytes / unit), s)
+        return f"{format}%s".format((base * bytes / unit), s)
+
+    return f"{format} %s".format((base * bytes / unit), s)

@@ -1,5 +1,6 @@
 # Shamefully stolen from https://github.com/sagold/FuzzyFilePath
 
+from typing import Any, Dict
 import re
 import sublime
 
@@ -13,7 +14,7 @@ NEEDLE_INVALID_CHARACTERS = r"\"\'\)=\:\(<>\n\{\}"
 DELIMITER = r"\s\:\(\[\=\{"
 
 
-def get_context(view: sublime.View):
+def get_context(view: sublime.View) -> Dict[str, Any]:
     error = False
     valid = True
     valid_needle = True
@@ -80,7 +81,6 @@ def get_context(view: sublime.View):
     # grab prefix
     prefix_region = sublime.Region(line_region.a, pre_region.b - len(pre_match) - 1)
     prefix_line = view.substr(prefix_region)
-    # # print("prefix line", prefix_line)
 
     # define? (["...", "..."]) -> before?
     # before: ABC =:([
@@ -90,20 +90,15 @@ def get_context(view: sublime.View):
         prefix = re.search(r"^\s*([" + NEEDLE_CHARACTERS + "]+)[" + DELIMITER + "]+", prefix_line)
 
     if prefix:
-        # print("prefix:", prefix.group(1))
         prefix = prefix.group(1)
 
     if separator is False:
-        # print(ID, "separator undefined => invalid", needle)
         valid_needle = False
         valid = False
     elif re.search("[" + NEEDLE_INVALID_CHARACTERS + "]", needle):
-        # print("["+NEEDLE_INVALID_CHARACTERS+"]", needle)
-        # print(ID, "invalid characters in needle => invalid", needle)
         valid_needle = False
         valid = False
     elif prefix is None and separator.strip() == "":
-        # print(ID, "prefix undefined => invalid", needle)
         valid = False
 
     return {

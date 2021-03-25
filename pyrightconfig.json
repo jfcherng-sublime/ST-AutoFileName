@@ -1,0 +1,16 @@
+{
+  "pythonVersion": "3.8",
+  "pythonPlatform": "Linux",
+  "include": [
+    "lib",
+  ],
+  "exclude": [
+    "**/.git",
+    "**/.venv",
+    "**/__pycache__",
+    "**/node_modules",
+    "**/stubs",
+    "**/typings",
+  ],
+  "stubPath": "language-server/_resources/typings",
+}

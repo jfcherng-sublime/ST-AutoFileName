@@ -1,10 +1,9 @@
-# from io import BytesIO
+from typing import Tuple
 import io
 import struct
 
 
-def getImageInfo(data):
-    olddata = str(data)
+def getImageInfo(data: bytes) -> Tuple[int, int]:
     data = bytes(data)
     size = len(data)
     height = -1
@@ -42,6 +41,7 @@ def getImageInfo(data):
         b = jpeg.read(1)
 
         try:
+            w, h = 0, 0
             while b != b"":
                 while b != b"\xFF":
                     b = jpeg.read(1)
