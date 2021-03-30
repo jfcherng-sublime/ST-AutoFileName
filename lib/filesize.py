@@ -68,11 +68,11 @@ def naturalsize(value: Union[int, float, str], binary: bool = False, gnu: bool =
     for i, s in enumerate(suffix):
         unit = base ** (i + 2)
         if abs_bytes < unit and not gnu:
-            return f"{format} %s".format((base * bytes / unit), s)
+            return f"{format} %s" % ((base * bytes / unit), s)
         elif abs_bytes < unit and gnu:
-            return f"{format}%s".format((base * bytes / unit), s)
+            return f"{format}%s" % ((base * bytes / unit), s)
 
     if gnu:
-        return f"{format}%s".format((base * bytes / unit), s)
+        return f"{format}%s" % ((base * bytes / unit), s)
 
-    return f"{format} %s".format((base * bytes / unit), s)
+    return f"{format} %s" % ((base * bytes / unit), s)
