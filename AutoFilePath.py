@@ -194,16 +194,18 @@ def disable_autocomplete() -> None:
 
 
 class FileNameComplete(sublime_plugin.ViewEventListener):
+    is_forced = False
+    is_active = False
+    sep = "/"
+
     def __init__(self, view: sublime.View) -> None:
         super().__init__(view)
-
-        FileNameComplete.is_forced = False
-        FileNameComplete.is_active = False
+        self.showing_win_drives = False
 
     def on_activated(self) -> None:
         self.showing_win_drives = False
-        FileNameComplete.sep = "/"
-        FileNameComplete.is_active = False
+        self.sep = "/"
+        self.is_active = False
 
     def on_query_context(self, key: str, operator: str, operand: str, match_all: bool) -> bool:
         view = self.view
@@ -211,7 +213,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         if key == "afp_deleting_slash":  # for reloading autocomplete
             selection = view.sel()[0]
             valid = (
-                self.at_path_end(view) and selection.empty() and view.substr(selection.a - 1) == FileNameComplete.sep
+                self.at_path_end(view) and selection.empty() and view.substr(selection.a - 1) == self.sep
             )
             return valid == operand
 
@@ -224,7 +226,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         view = self.view
         is_always_enabled = not self.get_setting("afp_use_keybinding", view)
 
-        if not (is_always_enabled or FileNameComplete.is_forced or FileNameComplete.is_active):
+        if not (is_always_enabled or self.is_forced or self.is_active):
             return
 
         selection = view.sel()[0].a
@@ -274,7 +276,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         file_name = view.file_name()
 
         # Open autocomplete automatically if keybinding mode is used
-        if not (FileNameComplete.is_forced or FileNameComplete.is_active):
+        if not (self.is_forced or self.is_active):
             return
 
         selection = view.sel()
@@ -291,20 +293,20 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
             extracted_path = scope_contents.replace("\r\n", "\n").split("\n")[0]
 
             if "\\" in extracted_path and not "/" in extracted_path:
-                FileNameComplete.sep = "\\"
+                self.sep = "\\"
 
             else:
-                FileNameComplete.sep = "/"
+                self.sep = "/"
 
             if (
-                view.substr(selection.a - 1) == FileNameComplete.sep
+                view.substr(selection.a - 1) == self.sep
                 or len(view.extract_scope(selection.a)) < 3
                 or not file_name
             ):
                 view.run_command("auto_complete", {"disable_auto_insert": True, "next_completion_if_showing": False})
 
         else:
-            FileNameComplete.is_active = False
+            self.is_active = False
 
     def at_path_end(self, view: sublime.View) -> bool:
         selection = view.sel()[0]
@@ -371,7 +373,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
 
     def get_cur_path(self, view: sublime.View, selection: int) -> str:
         cur_path = self.get_entered_path(view, selection)
-        return cur_path[: cur_path.rfind(FileNameComplete.sep) + 1] if FileNameComplete.sep in cur_path else ""
+        return cur_path[: cur_path.rfind(self.sep) + 1] if self.sep in cur_path else ""
 
     def get_setting(self, key: str, view: Optional[sublime.View] = None) -> Any:
         if view and view.settings().get(key):
@@ -394,9 +396,9 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         for driver in drive_list:
             g_auto_completions.append(
                 sublime.CompletionItem(
-                    trigger=f"{driver}:{FileNameComplete.sep}",
+                    trigger=f"{driver}:{self.sep}",
                     annotation="Drive",
-                    completion=f"{driver}:{FileNameComplete.sep}",
+                    completion=f"{driver}:{self.sep}",
                     kind=(sublime.KIND_ID_MARKUP, "🖴", "Drive"),
                     details="",
                 )
@@ -469,7 +471,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
                     continue
 
                 if not "." in directory:
-                    directory += FileNameComplete.sep
+                    directory += self.sep
 
                 g_auto_completions.append(self.prepare_completion(self.view, this_dir, directory))
                 InsertDimensionsCommand.this_dir = this_dir
