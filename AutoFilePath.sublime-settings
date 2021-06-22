@@ -14,8 +14,9 @@
     "afp_proj_root": "",
     // Specify which scopes will trigger AutoFilePath
     "afp_valid_scopes": [
-        "text",
-        "source",
+        "text - text.html.basic",
+        "source string",
+        "source.css | source.less | source.sass | source.scss",
     ],
     // Turn on if using a template language like Slim and want to
     // insert image dimensions.  If using a template language, you also have
@@ -24,6 +25,8 @@
     // BlackList specific scopes
     "afp_blacklist_scopes": [
         "string.regexp.js",
+        "string.regexp",
+        "comment",
     ],
     "afp_scopes": [
         {
