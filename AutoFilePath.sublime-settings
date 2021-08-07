@@ -14,7 +14,7 @@
     "afp_proj_root": "",
     // Specify which scopes will trigger AutoFilePath
     "afp_valid_scopes": [
-        "text - text.html.basic",
+        "text.html.basic - source.php",
         "source string",
         "source.css | source.less | source.sass | source.scss",
     ],
