@@ -79,7 +79,8 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
         needle = word
 
     # grab prefix
-    prefix_region = sublime.Region(line_region.a, pre_region.b - len(pre_match) - 1)
+    pre_match_trim = (len(pre_match) - 1) if len(pre_match) > 1 else 0
+    prefix_region = sublime.Region(line_region.a, pre_region.b - pre_match_trim)
     prefix_line = view.substr(prefix_region)
 
     # define? (["...", "..."]) -> before?
