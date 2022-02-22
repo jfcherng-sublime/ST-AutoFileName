@@ -25,7 +25,6 @@
     "afp_template_languages": false,
     // BlackList specific scopes
     "afp_blacklist_scopes": [
-        "string.regexp.js",
         "string.regexp",
         "comment",
     ],

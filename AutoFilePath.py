@@ -12,7 +12,7 @@ import sublime
 import sublime_plugin
 import time
 
-g_auto_completions = []  # type: List[sublime.CompletionItem]
+g_auto_completions: List[sublime.CompletionItem] = []
 MAXIMUM_WAIT_TIME = 0.3
 
 
@@ -212,9 +212,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
 
         if key == "afp_deleting_slash":  # for reloading autocomplete
             selection = view.sel()[0]
-            valid = (
-                self.at_path_end(view) and selection.empty() and view.substr(selection.a - 1) == self.sep
-            )
+            valid = self.at_path_end(view) and selection.empty() and view.substr(selection.a - 1) == self.sep
             return valid == operand
 
         if key == "afp_use_keybinding":
@@ -228,23 +226,21 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
 
         if not (is_always_enabled or self.is_forced or self.is_active):
             return
+        caret = view.sel()[0].a
 
-        selection = view.sel()[0].a
-
-        if "string.regexp.js" in view.scope_name(selection):
-            return
-
-        blacklist = self.get_setting("afp_blacklist_scopes", view)
         valid_scopes = self.get_setting("afp_valid_scopes", view)
+        blacklist = self.get_setting("afp_blacklist_scopes", view)
+        caret_scopes = self.view.scope_name(caret)
 
-        if not any(view.match_selector(selection, scope) for scope in valid_scopes):
-            return
-
-        if any(view.match_selector(selection, scope) for scope in blacklist):
+        if (
+            not any(view.match_selector(caret, scope) for scope in valid_scopes)
+            # ...
+            or any(view.match_selector(caret, scope) for scope in blacklist)
+        ):
             return
 
         self.view = view
-        self.selection = selection
+        self.caret = caret
 
         self.start_time = time.time()
         self.add_completions()
@@ -298,11 +294,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
             else:
                 self.sep = "/"
 
-            if (
-                view.substr(selection.a - 1) == self.sep
-                or len(view.extract_scope(selection.a)) < 3
-                or not file_name
-            ):
+            if view.substr(selection.a - 1) == self.sep or len(view.extract_scope(selection.a)) < 3 or not file_name:
                 view.run_command("auto_complete", {"disable_auto_insert": True, "next_completion_if_showing": False})
 
         else:
@@ -423,7 +415,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         is_proj_rel = self.get_setting("afp_use_project_root", self.view)
 
         this_dir = ""
-        cur_path = os.path.expanduser(self.get_cur_path(self.view, self.selection))  # type:str
+        cur_path = os.path.expanduser(self.get_cur_path(self.view, self.caret))  # type:str
 
         if cur_path.startswith("\\\\") and not cur_path.startswith("\\\\\\") and sublime.platform() == "windows":
             self.showing_win_drives = True
@@ -446,14 +438,14 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
             this_dir = os.path.join(this_dir, cur_path)
 
             if scope_settings and scope_settings.get("aliases"):
-                entered_path = self.get_entered_path(self.view, self.selection)
+                entered_path = self.get_entered_path(self.view, self.caret)
                 result_path = apply_alias_replacements(entered_path, scope_settings.get("aliases"))
                 if result_path:
                     this_dir = re.sub(r"[^/]+$", "", result_path)
 
         try:
             if os.path.isabs(cur_path) and (not is_proj_rel or not this_dir):
-                if sublime.platform() == "windows" and len(self.view.extract_scope(self.selection)) < 4:
+                if sublime.platform() == "windows" and len(self.view.extract_scope(self.caret)) < 4:
                     self.showing_win_drives = True
                     self.add_drives()
                     return
