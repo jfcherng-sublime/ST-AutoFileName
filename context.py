@@ -15,12 +15,14 @@ DELIMITER = r"\s\:\(\[\=\{"
 
 
 def get_context(view: sublime.View) -> Dict[str, Any]:
+    if not (selection := view.sel()):
+        return {}
+
     error = False
     valid = True
     valid_needle = True
 
-    selection = view.sel()
-    position = selection[0].begin() if selection else ""
+    position = selection[0].begin()
 
     # regions
     line_region = view.line(position)
@@ -36,6 +38,25 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
     word = view.substr(word_region)
     pre = view.substr(pre_region)
     post = view.substr(post_region)
+
+    # special fixes for markdown image/link
+    if view.match_selector(position, "text.html.markdown"):
+        # fix pre
+        if word.startswith("[]("):
+            pre = word[:3] + pre
+            word = word[3:]
+        elif word.startswith("]("):
+            pre = word[:2] + pre
+            word = word[2:]
+        # fix post
+        if word.endswith(")"):
+            post += word[-1:]
+            word = word[:-1]
+
+        # print(f"{line = }")
+        # print(f"{word = }")
+        # print(f"{pre = }")
+        # print(f"{post = }")
 
     # word can equal "('./')" or "'./'" when the path contains only a special characters, like require('./')
     enquoted_symbols_match = re.search(r'(\(?[\'"`])(\W+)([\'"`]\)?)', word)

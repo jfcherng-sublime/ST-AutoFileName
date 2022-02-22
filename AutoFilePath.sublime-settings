@@ -17,6 +17,7 @@
         "text.html.basic - source.php",
         "source string",
         "source.css | source.less | source.sass | source.scss",
+        "meta.link.inline | meta.image.inline",
     ],
     // Turn on if using a template language like Slim and want to
     // insert image dimensions.  If using a template language, you also have
