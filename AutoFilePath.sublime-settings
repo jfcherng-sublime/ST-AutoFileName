@@ -30,7 +30,7 @@
     ],
     "afp_scopes": [
         {
-            "scope": "\\.jsx?\\s",
+            "scope": "\\.[jt]sx?(?=\\s|$)",
             "prefixes": [
                 "require",
                 "define",
@@ -46,7 +46,7 @@
                 ],
                 // after insertion, remove .js or .vue from path
                 [
-                    "\\.(jsx?|vue)$",
+                    "\\.([jt]sx?|vue)$",
                     "",
                 ],
             ],
