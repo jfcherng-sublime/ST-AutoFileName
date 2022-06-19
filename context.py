@@ -10,7 +10,7 @@ NEEDLE_SEPARATOR = r">\"\'\(\)\{\}"
 NEEDLE_SEPARATOR_BEFORE = r"\"\'\(\{"
 NEEDLE_SEPARATOR_AFTER = r"^\"\'\)\}"
 NEEDLE_CHARACTERS = r"\.A-Za-z0-9\-\_$"
-NEEDLE_INVALID_CHARACTERS = r"\"\'\)=\:\(<>\n\{\}"
+NEEDLE_INVALID_CHARACTERS = r"\"\'\)=\(<>\n\{\}"
 DELIMITER = r"\s\:\(\[\=\{"
 
 
@@ -67,14 +67,14 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
 
     word = word.rstrip("\"';)]}")
 
-    error = re.search("[" + NEEDLE_INVALID_CHARACTERS + "]", word)
+    error = re.search(rf"[{NEEDLE_INVALID_CHARACTERS}]", word)
 
     # grab everything in 'separators'
     needle = ""
     separator = False
     pre_match = ""
     # search for a separator before current word, i.e. <">path/to/<position>
-    pre_quotes = re.search("([" + NEEDLE_SEPARATOR_BEFORE + "])([^" + NEEDLE_SEPARATOR + "]*)$", pre)
+    pre_quotes = re.search(rf"([{NEEDLE_SEPARATOR_BEFORE}])([^{NEEDLE_SEPARATOR}]*)$", pre)
 
     if pre_quotes:
         needle += pre_quotes.group(2) + word
@@ -82,19 +82,19 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
         pre_match = pre_quotes.group(2)
     else:
         # use whitespace as separator
-        pre_quotes = re.search(r"(\s)([^" + NEEDLE_SEPARATOR + r"\s]*)$", pre)
+        pre_quotes = re.search(rf"(\s)([^{NEEDLE_SEPARATOR}\s]*)$", pre)
         if pre_quotes:
             needle = pre_quotes.group(2) + word
             separator = pre_quotes.group(1)
             pre_match = pre_quotes.group(2)
 
     if pre_quotes:
-        post_quotes = re.search("^([" + NEEDLE_SEPARATOR_AFTER + "]*)", post)
+        post_quotes = re.search(rf"^([{NEEDLE_SEPARATOR_AFTER}]*)", post)
         if post_quotes:
             needle += post_quotes.group(1)
         else:
             valid = False
-    elif not re.search("[" + NEEDLE_INVALID_CHARACTERS + "]", needle):
+    elif not re.search(rf"[{NEEDLE_INVALID_CHARACTERS}]", needle):
         needle = pre + word
     else:
         needle = word
@@ -106,10 +106,10 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
 
     # define? (["...", "..."]) -> before?
     # before: ABC =:([
-    prefix = re.search(r"\s*([" + NEEDLE_CHARACTERS + "]+)[" + DELIMITER + "]*$", prefix_line)
+    prefix = re.search(rf"\s*([{NEEDLE_CHARACTERS}]+)[{DELIMITER}]*$", prefix_line)
     if prefix is None:
         # validate array, like define(["...", ".CURSOR."])
-        prefix = re.search(r"^\s*([" + NEEDLE_CHARACTERS + "]+)[" + DELIMITER + "]+", prefix_line)
+        prefix = re.search(rf"^\s*([{NEEDLE_CHARACTERS}]+)[{DELIMITER}]+", prefix_line)
 
     if prefix:
         prefix = prefix.group(1)
@@ -117,7 +117,7 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
     if separator is False:
         valid_needle = False
         valid = False
-    elif re.search("[" + NEEDLE_INVALID_CHARACTERS + "]", needle):
+    elif re.search(rf"[{NEEDLE_INVALID_CHARACTERS}]", needle):
         valid_needle = False
         valid = False
     elif prefix is None and separator.strip() == "":
