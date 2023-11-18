@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
 """Bits and bytes related humanization."""
+from __future__ import annotations
 
-from typing import Dict, Iterable, Union
+from typing import Iterable
 
-
-suffixes = {
+suffixes: dict[str, Iterable[str]] = {
     "decimal": ("kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"),
     "binary": ("KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"),
     "gnu": "KMGTPEZY",
-}  # type: Dict[str,Iterable[str]]
+}
 
 
-def naturalsize(value: Union[int, float, str], binary: bool = False, gnu: bool = False, format: str = "%.1f") -> str:
+def naturalsize(value: int | float | str, binary: bool = False, gnu: bool = False, format: str = "%.1f") -> str:
     """Format a number of bytes like a human readable filesize (e.g. 10 kB).
 
     By default, decimal suffixes (kB, MB) are used.

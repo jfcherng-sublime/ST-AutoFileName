@@ -1,19 +1,18 @@
-from typing import Tuple
+from __future__ import annotations
+
 import io
 import struct
 
 
-def getImageInfo(data: bytes) -> Tuple[int, int]:
+def getImageInfo(data: bytes) -> tuple[int, int]:
     data = bytes(data)
     size = len(data)
     height = -1
     width = -1
-    content_type = ""
 
     # handle GIFs
     if (size >= 10) and data[:6] == b"GIF89a":
         # Check to see if content_type is correct
-        content_type = "image/gif"
         w, h = struct.unpack("<HH", data[6:10])
         width = int(w)
         height = int(h)
@@ -43,11 +42,11 @@ def getImageInfo(data: bytes) -> Tuple[int, int]:
         try:
             w, h = 0, 0
             while b != b"":
-                while b != b"\xFF":
+                while b != b"\xff":
                     b = jpeg.read(1)
-                while b == b"\xFF":
+                while b == b"\xff":
                     b = jpeg.read(1)
-                if b >= b"\xC0" and b <= b"\xC3":
+                if b >= b"\xc0" and b <= b"\xc3":
                     jpeg.read(3)
                     h, w = struct.unpack(">HH", jpeg.read(4))
                     break

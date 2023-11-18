@@ -1,22 +1,25 @@
-from .context import get_context
-from .lib.filesize import naturalsize
-from .lib.image_info import getImageInfo
-from typing import Any, List, Optional, Tuple
+from __future__ import annotations
+
 import ctypes
-import io
 import itertools
 import os
 import re
 import string
+import time
+from typing import Any
+
 import sublime
 import sublime_plugin
-import time
 
-g_auto_completions: List[sublime.CompletionItem] = []
+from .context import get_context
+from .libs.filesize import naturalsize
+from .libs.image_info import getImageInfo
+
+g_auto_completions: list[sublime.CompletionItem] = []
 MAXIMUM_WAIT_TIME = 0.3
 
 
-def get_setting(string, view: Optional[sublime.View] = None) -> Any:
+def get_setting(string, view: sublime.View | None = None) -> Any:
     if view and view.settings().get(string):
         return view.settings().get(string)
     else:
@@ -33,7 +36,7 @@ def get_cur_scope_settings(view: sublime.View):
             return scope_settings
 
 
-def apply_alias_replacements(entered_path, aliases) -> Optional[str]:
+def apply_alias_replacements(entered_path, aliases) -> str | None:
     project_root = sublime.active_window().folders()[0]
     replacers = [("<project_root>", project_root)]
 
@@ -138,7 +141,7 @@ class InsertDimensionsCommand(sublime_plugin.TextCommand):
         view.run_command("commit_completion")
         selection = view.sel()[0].a
 
-        if not "html" in view.scope_name(selection):
+        if "html" not in view.scope_name(selection):
             return
         scope = view.extract_scope(selection - 1)
 
@@ -220,7 +223,11 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
 
         return False
 
-    def on_query_completions(self, prefix: str, locations) -> Optional[Tuple[List[sublime.CompletionItem], int]]:
+    def on_query_completions(
+        self,
+        prefix: str,
+        locations: list[int],
+    ) -> tuple[list[sublime.CompletionItem], int] | None:
         view = self.view
         is_always_enabled = not self.get_setting("afp_use_keybinding", view)
 
@@ -230,11 +237,10 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
 
         valid_scopes = self.get_setting("afp_valid_scopes", view)
         blacklist = self.get_setting("afp_blacklist_scopes", view)
-        caret_scopes = self.view.scope_name(caret)
 
         if (
-            not any(view.match_selector(caret, scope) for scope in valid_scopes)
             # ...
+            not any(view.match_selector(caret, scope) for scope in valid_scopes)
             or any(view.match_selector(caret, scope) for scope in blacklist)
         ):
             return
@@ -267,34 +273,27 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         if not view.window():
             return
 
-        view_name = view.name()
-        buffer_id = view.buffer_id()
         file_name = view.file_name()
 
         # Open autocomplete automatically if keybinding mode is used
         if not (self.is_forced or self.is_active):
             return
 
-        selection = view.sel()
-
-        # Fix sublime.py, line 641, in __getitem__ raise IndexError()
-        if len(selection):
-            selection = view.sel()[0]
-        else:
+        if not len(sel := view.sel()):
             return
+        region = sel[0]
 
         # if selection.empty() and self.at_path_end(view):
-        if selection.empty():
-            scope_contents = view.substr(view.extract_scope(selection.a - 1))
+        if region.empty():
+            scope_contents = view.substr(view.extract_scope(region.a - 1))
             extracted_path = scope_contents.replace("\r\n", "\n").split("\n")[0]
 
-            if "\\" in extracted_path and not "/" in extracted_path:
+            if "\\" in extracted_path and "/" not in extracted_path:
                 self.sep = "\\"
-
             else:
                 self.sep = "/"
 
-            if view.substr(selection.a - 1) == self.sep or len(view.extract_scope(selection.a)) < 3 or not file_name:
+            if view.substr(region.a - 1) == self.sep or len(view.extract_scope(region.a)) < 3 or not file_name:
                 view.run_command("auto_complete", {"disable_auto_insert": True, "next_completion_if_showing": False})
 
         else:
@@ -336,13 +335,12 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         if path.endswith((".gif", ".jpeg", ".jpg", ".png")):
             details_head = "Image"
 
-            with io.open(path, "rb") as f:
+            with open(path, "rb") as f:
                 read_data = f.read() if path.endswith((".jpeg", ".jpg")) else f.read(24)
 
             try:
                 w, h = getImageInfo(read_data)
-                details_parts.append("Height: " + str(h))
-                details_parts.append("Width: " + str(w))
+                details_parts.extend((f"Height: {h}", f"Width: {w}"))
             except Exception:
                 pass
 
@@ -367,7 +365,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
         cur_path = self.get_entered_path(view, selection)
         return cur_path[: cur_path.rfind(self.sep) + 1] if self.sep in cur_path else ""
 
-    def get_setting(self, key: str, view: Optional[sublime.View] = None) -> Any:
+    def get_setting(self, key: str, view: sublime.View | None = None) -> Any:
         if view and view.settings().get(key):
             return view.settings().get(key)
 
@@ -408,14 +406,14 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
 
         scope_settings = get_cur_scope_settings(self.view)
         if scope_settings and scope_settings.get("prefixes") and ctx["prefix"]:
-            if not ctx["prefix"] in scope_settings.get("prefixes"):
+            if ctx["prefix"] not in scope_settings.get("prefixes"):
                 return
 
         file_name = self.view.file_name()
         is_proj_rel = self.get_setting("afp_use_project_root", self.view)
 
         this_dir = ""
-        cur_path = os.path.expanduser(self.get_cur_path(self.view, self.caret))  # type:str
+        cur_path = os.path.expanduser(self.get_cur_path(self.view, self.caret))
 
         if cur_path.startswith("\\\\") and not cur_path.startswith("\\\\\\") and sublime.platform() == "windows":
             self.showing_win_drives = True
@@ -462,7 +460,7 @@ class FileNameComplete(sublime_plugin.ViewEventListener):
                 if directory.startswith("."):
                     continue
 
-                if not "." in directory:
+                if "." not in directory:
                     directory += self.sep
 
                 g_auto_completions.append(self.prepare_completion(self.view, this_dir, directory))

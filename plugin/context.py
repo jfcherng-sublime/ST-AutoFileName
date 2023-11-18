@@ -1,7 +1,9 @@
 # Shamefully stolen from https://github.com/sagold/FuzzyFilePath
+from __future__ import annotations
 
-from typing import Any, Dict
 import re
+from typing import Any
+
 import sublime
 
 ID = "Context"
@@ -14,15 +16,15 @@ NEEDLE_INVALID_CHARACTERS = r"\"\'\)=\(<>\n\{\}"
 DELIMITER = r"\s\:\(\[\=\{"
 
 
-def get_context(view: sublime.View) -> Dict[str, Any]:
-    if not (selection := view.sel()):
+def get_context(view: sublime.View) -> dict[str, Any]:
+    if not (sel := view.sel()):
         return {}
 
     error = False
     valid = True
     valid_needle = True
 
-    position = selection[0].begin()
+    position = sel[0].begin()
 
     # regions
     line_region = view.line(position)
@@ -34,7 +36,6 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
     post_region = sublime.Region(word_region.b, line_region.b)
 
     # text
-    line = view.substr(line_region)
     word = view.substr(word_region)
     pre = view.substr(pre_region)
     post = view.substr(post_region)
@@ -59,11 +60,10 @@ def get_context(view: sublime.View) -> Dict[str, Any]:
         # print(f"{post = }")
 
     # word can equal "('./')" or "'./'" when the path contains only a special characters, like require('./')
-    enquoted_symbols_match = re.search(r'(\(?[\'"`])(\W+)([\'"`]\)?)', word)
-    if enquoted_symbols_match:
-        word = enquoted_symbols_match.group(2)
-        pre = pre + enquoted_symbols_match.group(1)
-        post = post + enquoted_symbols_match.group(3)
+    if (m := re.search(r'(\(?[\'"`])(\W+)([\'"`]\)?)', word)):
+        word = m.group(2)
+        pre = pre + m.group(1)
+        post = post + m.group(3)
 
     word = word.rstrip("\"';)]}")
 
