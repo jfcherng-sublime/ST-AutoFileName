@@ -1,8 +1,3 @@
-*.css
-*.html
-*.png
-*.pyc
-
 # OS
 .DS_Store
 Desktop.ini

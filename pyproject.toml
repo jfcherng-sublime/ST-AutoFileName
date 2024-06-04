@@ -43,18 +43,15 @@ pythonVersion = '3.8'
 
 [tool.ruff]
 preview = true
-select = ["E", "F", "W", "I", "UP"]
-ignore = ["E203"]
 line-length = 120
 target-version = 'py38'
 exclude = [
+  "*/libs/*",
   ".git",
   ".mypy_cache",
   ".venv",
   ".venv-*",
   "branch-*",
-  "libs",
-  "plugin/libs",
   "stubs",
   "tests/files",
   "typings",
@@ -63,5 +60,9 @@ exclude = [
   "venv-*",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "FURB"]
+ignore = ["E203"]
+
+[tool.ruff.lint.per-file-ignores]
 "boot.py" = ["E402"]
